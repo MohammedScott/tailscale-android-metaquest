@@ -32,6 +32,12 @@ jobs:
         run: |
           sdkmanager "ndk;23.1.7779620"
 
+      - name: Generate Version Files
+        # This creates the file that Gradle was complaining about
+        run: |
+          echo "1.94.2-metaquest-custom" > tailscale.version
+          echo "1.94.2" > VERSION
+
       - name: Build debug APK
         working-directory: android
         run: |
@@ -42,5 +48,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tailscale-quest-debug
-          # Path adjusted to where Gradle actually spits out the file
           path: android/app/build/outputs/apk/debug/*.apk
