@@ -1,0 +1,39 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.toolchain.rev
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK and build tools
+        run: |
+          sdkmanager "ndk;23.1.7779620" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Build debug APK
+        run: make debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailscale-quest-debug
+          path: tailscale-debug.apk
