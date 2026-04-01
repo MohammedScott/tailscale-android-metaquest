@@ -1,13 +1,14 @@
 name: Build Debug APK
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.24'
           cache: true
 
       - name: Set up JDK
@@ -28,24 +29,15 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android NDK
+      - name: Install Android NDK and build tools
         run: |
-          sdkmanager "ndk;23.1.7779620"
+          sdkmanager "ndk;23.1.7779620" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Generate Version Files
-        # This creates the file that Gradle was complaining about
-        run: |
-          echo "1.94.2-metaquest-custom" > tailscale.version
-          echo "1.94.2" > VERSION
-
-      - name: Build debug APK
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Build APK
+        run: make apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: tailscale-quest-debug
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: tailscale-debug.apk
