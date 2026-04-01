@@ -268,15 +268,23 @@ class App : UninitializedApp(), libtailscale.AppContext, ViewModelStoreOwner {
   }
 
   @Throws(IOException::class, GeneralSecurityException::class)
-  fun getEncryptedPrefs(): SharedPreferences {
-    val key = MasterKey.Builder(this).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-    return EncryptedSharedPreferences.create(
-        this,
-        "secret_shared_prefs",
-        key,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM)
-  }
+fun getEncryptedPrefs(): SharedPreferences {
+       return try {
+           val masterKey = MasterKey.Builder(this)
+               .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+               .build()
+           EncryptedSharedPreferences.create(
+               this,
+               "tailscale_prefs",
+               masterKey,
+               EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+               EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+           )
+       } catch (e: Exception) {
+           // Fallback for devices without AndroidKeyStore (e.g. Meta Quest)
+           applicationContext.getSharedPreferences("tailscale_prefs_plain", Context.MODE_PRIVATE)
+       }
+   }
 
   fun getStoredDirectoryUri(): Uri? {
     val uriString = getEncryptedPrefs().getString(PREF_KEY_SAF_URI, null)
